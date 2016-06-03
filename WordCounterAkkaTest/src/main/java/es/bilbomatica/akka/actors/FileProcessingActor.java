@@ -5,11 +5,15 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.routing.RoundRobinPool;
 import akka.routing.RouterConfig;
+import es.bilbomatica.akka.actors.base.Actors;
+import es.bilbomatica.akka.actors.base.ProcessingActor;
 import es.bilbomatica.akka.messages.base.Message;
 import es.bilbomatica.strategy.handler.MessageHandler;
 import es.bilbomatica.strategy.handler.impl.MessageHandlerImpl;
 
-public class FileProcessingActor extends UntypedActor {
+public class FileProcessingActor extends UntypedActor implements ProcessingActor {
+	
+	private final Actors actor = Actors.FILE_PROCESSING;
 	
 	private final MessageHandler messageHandler = MessageHandlerImpl.getInstance();
 	
@@ -41,12 +45,17 @@ public class FileProcessingActor extends UntypedActor {
 		
 		if (message instanceof Message)
 		{
-			messageHandler.handleMessage((UntypedActor)this, (Message)message);
+			messageHandler.handleMessage(this, (Message)message);
 		}
 		else
 		{
 			this.unhandled(message);
 		}
+	}
+
+	@Override
+	public Actors getActor() {
+		return actor;
 	}
 
 	public MessageHandler getMessageHandler() {

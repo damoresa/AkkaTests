@@ -1,9 +1,9 @@
 package es.bilbomatica.strategy.handler.impl;
 
-import akka.actor.UntypedActor;
 import es.bilbomatica.akka.actors.CompletionListenerActor;
 import es.bilbomatica.akka.actors.FileProcessingActor;
 import es.bilbomatica.akka.actors.LineProcessingActor;
+import es.bilbomatica.akka.actors.base.ProcessingActor;
 import es.bilbomatica.akka.messages.FileProcessedMessage;
 import es.bilbomatica.akka.messages.LineProcessedMessage;
 import es.bilbomatica.akka.messages.ProcessFileMessage;
@@ -43,36 +43,33 @@ public class MessageHandlerImpl implements MessageHandler {
 	private final ProcessLineMessageProcessor processLineMessageProcessor = new ProcessLineMessageProcessor();
 	
 	@Override
-	public void handleMessage(UntypedActor actor, Message message) {
+	public void handleMessage(ProcessingActor actor, Message message) {
 		
-		if (actor instanceof FileProcessingActor)
+		switch (actor.getActor())
 		{
-			FileProcessingActor fileProcessingActor = (FileProcessingActor) actor;
-			
-			if (message instanceof ProcessFileMessage)
-			{
-				processFileMessageProcessor.processMessage(fileProcessingActor, (ProcessFileMessage)message);
-			}
-			else if (message instanceof LineProcessedMessage)
-			{
-				lineProcessedMessageProcessor.processMessage(fileProcessingActor, (LineProcessedMessage)message);
-			}
-			else
-			{
+			case FILE_PROCESSING:
+				FileProcessingActor fileProcessingActor = (FileProcessingActor) actor;
+				
+				switch (message.getMessageType())
+				{
+					case REQUEST:
+						processFileMessageProcessor.processMessage(fileProcessingActor, (ProcessFileMessage)message);
+					break;
+					case RESPONSE:
+						lineProcessedMessageProcessor.processMessage(fileProcessingActor, (LineProcessedMessage)message);
+					break;
+					default:
+						actor.unhandled(message);
+				}
+			break;
+			case LINE_PROCESSING:
+				processLineMessageProcessor.processMessage((LineProcessingActor)actor, (ProcessLineMessage)message);
+			break;
+			case COMPLETION_LISTENER:
+				fileProcessedMessageProcessor.processMessage((CompletionListenerActor)actor, (FileProcessedMessage)message);
+			break;
+			default:
 				actor.unhandled(message);
-			}
-		}
-		else if (actor instanceof LineProcessingActor)
-		{
-			processLineMessageProcessor.processMessage((LineProcessingActor)actor, (ProcessLineMessage)message);
-		}
-		else if (actor instanceof CompletionListenerActor)
-		{
-			fileProcessedMessageProcessor.processMessage((CompletionListenerActor)actor, (FileProcessedMessage)message);
-		}
-		else
-		{
-			actor.unhandled(message);
 		}
 	}
 
