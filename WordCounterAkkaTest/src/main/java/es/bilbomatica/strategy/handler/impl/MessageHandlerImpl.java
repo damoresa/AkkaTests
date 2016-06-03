@@ -9,6 +9,7 @@ import es.bilbomatica.akka.messages.LineProcessedMessage;
 import es.bilbomatica.akka.messages.ProcessFileMessage;
 import es.bilbomatica.akka.messages.ProcessLineMessage;
 import es.bilbomatica.akka.messages.base.Message;
+import es.bilbomatica.strategy.cases.MessageProcessor;
 import es.bilbomatica.strategy.cases.impl.FileProcessedMessageProcessor;
 import es.bilbomatica.strategy.cases.impl.LineProcessedMessageProcessor;
 import es.bilbomatica.strategy.cases.impl.ProcessFileMessageProcessor;
@@ -36,11 +37,11 @@ public class MessageHandlerImpl implements MessageHandler {
 		
 		return handlerInstance;
 	}
-	
-	private final FileProcessedMessageProcessor fileProcessedMessageProcessor = new FileProcessedMessageProcessor();
-	private final LineProcessedMessageProcessor lineProcessedMessageProcessor = new LineProcessedMessageProcessor();
-	private final ProcessFileMessageProcessor processFileMessageProcessor = new ProcessFileMessageProcessor();
-	private final ProcessLineMessageProcessor processLineMessageProcessor = new ProcessLineMessageProcessor();
+
+	private final MessageProcessor<CompletionListenerActor, FileProcessedMessage> fileProcessedMessageProcessor = new FileProcessedMessageProcessor();
+	private final MessageProcessor<FileProcessingActor, LineProcessedMessage> lineProcessedMessageProcessor = new LineProcessedMessageProcessor();
+	private final MessageProcessor<FileProcessingActor, ProcessFileMessage> processFileMessageProcessor = new ProcessFileMessageProcessor();
+	private final MessageProcessor<LineProcessingActor, ProcessLineMessage> processLineMessageProcessor = new ProcessLineMessageProcessor();
 	
 	@Override
 	public void handleMessage(ProcessingActor actor, Message message) {
