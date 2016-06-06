@@ -7,15 +7,16 @@ import akka.routing.RoundRobinPool;
 import akka.routing.RouterConfig;
 import es.bilbomatica.akka.actors.base.Actors;
 import es.bilbomatica.akka.actors.base.ProcessingActor;
+import es.bilbomatica.akka.factory.MessageProcessorFactory;
+import es.bilbomatica.akka.factory.impl.MessageProcessorFactoryImpl;
 import es.bilbomatica.akka.messages.base.Message;
-import es.bilbomatica.strategy.handler.MessageHandler;
-import es.bilbomatica.strategy.handler.impl.MessageHandlerImpl;
+import es.bilbomatica.akka.strategy.cases.MessageProcessor;
 
 public class FileProcessingActor extends UntypedActor implements ProcessingActor {
 	
 	private final Actors actor = Actors.FILE_PROCESSING;
 	
-	private final MessageHandler messageHandler = MessageHandlerImpl.getInstance();
+	private final MessageProcessorFactory messageProcessorFactory = MessageProcessorFactoryImpl.getInstance();
 	
 	private final long start = System.currentTimeMillis();
 	
@@ -45,7 +46,12 @@ public class FileProcessingActor extends UntypedActor implements ProcessingActor
 		
 		if (message instanceof Message)
 		{
-			messageHandler.handleMessage(this, (Message)message);
+			ProcessingActor processingActor = (ProcessingActor) this;
+			Message receivedMessage = (Message) message;
+			
+			MessageProcessor messageProcessor = 
+					messageProcessorFactory.getMessageProcessor(processingActor, receivedMessage);
+			messageProcessor.processMessage(processingActor, receivedMessage);
 		}
 		else
 		{
@@ -56,10 +62,6 @@ public class FileProcessingActor extends UntypedActor implements ProcessingActor
 	@Override
 	public Actors getActor() {
 		return actor;
-	}
-
-	public MessageHandler getMessageHandler() {
-		return messageHandler;
 	}
 
 	public long getStart() {

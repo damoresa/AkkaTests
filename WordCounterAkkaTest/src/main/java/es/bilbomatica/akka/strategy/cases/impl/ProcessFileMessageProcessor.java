@@ -1,4 +1,4 @@
-package es.bilbomatica.strategy.cases.impl;
+package es.bilbomatica.akka.strategy.cases.impl;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -6,21 +6,24 @@ import java.io.FileReader;
 import java.io.IOException;
 
 import es.bilbomatica.akka.actors.FileProcessingActor;
+import es.bilbomatica.akka.actors.base.ProcessingActor;
 import es.bilbomatica.akka.exception.InitProcessException;
 import es.bilbomatica.akka.messages.ProcessFileMessage;
 import es.bilbomatica.akka.messages.ProcessLineMessage;
-import es.bilbomatica.strategy.cases.MessageProcessor;
+import es.bilbomatica.akka.messages.base.Message;
+import es.bilbomatica.akka.strategy.cases.MessageProcessor;
 
-public class ProcessFileMessageProcessor implements MessageProcessor<FileProcessingActor, ProcessFileMessage> {
+public class ProcessFileMessageProcessor implements MessageProcessor {
 
 	@Override
-	public void processMessage(FileProcessingActor actor, ProcessFileMessage message) {
+	public void processMessage(ProcessingActor actor, Message message) {
 		
-		if (!actor.isRunning())
+		FileProcessingActor fileProcessingActor = (FileProcessingActor) actor;
+		ProcessFileMessage processFile = (ProcessFileMessage) message;
+		
+		if (!fileProcessingActor.isRunning())
 		{
-			actor.setRunning(true);
-			
-			ProcessFileMessage processFile = (ProcessFileMessage) message;
+			fileProcessingActor.setRunning(true);
 			
 			File path = new File(processFile.getFilePath());
 			File sourceFile = new File(processFile.getFilePath() + File.separator + processFile.getFileName());
@@ -38,9 +41,9 @@ public class ProcessFileMessageProcessor implements MessageProcessor<FileProcess
 				do
 				{
 					readLine = reader.readLine();
-					actor.increaseNoLines();
+					fileProcessingActor.increaseNoLines();
 					
-					actor.getWorkerRouter().tell(new ProcessLineMessage(readLine), actor.getSelf());
+					fileProcessingActor.getWorkerRouter().tell(new ProcessLineMessage(readLine), fileProcessingActor.getSelf());
 				}
 				while (readLine != null);
 			}
